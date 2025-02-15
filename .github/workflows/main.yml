@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '14'
 
       - name: Install dependencies
         run: npm install
@@ -31,7 +31,7 @@ jobs:
         run: npm install -g pkg
 
       - name: Build executable for Windows
-        run: pkg . --targets node16-win-x64 --output paintbynumbersgenerator-win.exe
+        run: pkg . --targets node14-win-x64 --output paintbynumbersgenerator-win.exe
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

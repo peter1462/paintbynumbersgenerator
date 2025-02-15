@@ -14,10 +14,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Install OS dependencies for canvas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev libpixman-1-dev
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'  # можно указать нужную версию Node.js
+          node-version: '16'
 
       - name: Install dependencies
         run: npm install

@@ -29,7 +29,7 @@ jobs:
         run: pkg . --targets node16-win-x64 --output paintbynumbersgenerator-win.exe
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: paintbynumbersgenerator-win
           path: paintbynumbersgenerator-win.exe

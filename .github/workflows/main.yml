@@ -29,6 +29,9 @@ jobs:
       - name: Set PKG_CONFIG_PATH for GTK
         run: echo "PKG_CONFIG_PATH=C:\GTK\lib\pkgconfig" >> $GITHUB_ENV
 
+      - name: Add GTK bin to PATH
+        run: echo "C:\GTK\bin" >> $GITHUB_PATH
+
       - name: Set environment variable for Visual Studio for node-gyp
         run: echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
 
@@ -59,7 +62,7 @@ jobs:
 
       - name: Cleanup unnecessary debug files
         working-directory: ./out
-        run: del *.pdb, *.ipdb, *.iobj
+        run: del *.pdb *.ipdb *.iobj
 
       - name: Upload out as artifact
         uses: actions/upload-artifact@v4

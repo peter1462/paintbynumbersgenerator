@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: CLI build
 
 on:
   push:
@@ -8,33 +8,60 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+      name: "Install dependencies from package-lock.json"
+    - run: npm install pkg -g
+      name: "Install pkg"
+    - run: npm install typescript -g
+      name: "Install typescript"
+    - run: tsc
+      working-directory: ./src-cli
+      name: "Build cli to javascript"
+    - run: pkg .
+      name: "Package cli to single executable"
+    
+    - run:  mkdir "out"
+      name: "Create output directory"
+    - run: copy paint-by-numbers-generator-win.exe .\out\paint-by-numbers-generator-win.exe
+      name: "Copy binary to out directory"
+    - run: copy .\node_modules\canvas\build\Release\* .\out
+      name: "Copy node-canvas binaries to output"
+    - run: del *.pdb, *.ipdb, *.iobj
+      name: "Cleanup unnecessary debug files"
+      working-directory: ./out
+    - uses: actions/upload-artifact@v2
+      name: "Upload out as artifact"
+      with:
+        name: pbn-cli-win
+        path: .\out\*
+      env:
+        CI: true
+    - run: mkdir artifacts
+    - name: Download a Build Artifact zip
+      uses: actions/download-artifact@v2.0.5
+      with:
+        name: "pbn-cli-win"
+        path: "./artifacts/pbn-cli-win.zip"
+    - uses: ncipollo/release-action@v1
+      name: "Create development prerelease"
+      with:
+        artifact: "artifacts/*"
+        prerelease: true
+        allowUpdates: true
+        name: "CLI Development build"
+        tag: "latest"
+        token: ${{ secrets.GITHUB_TOKEN }}  
 
-      - name: Install OS dependencies for canvas
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev libpixman-1-dev
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '14'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install pkg globally
-        run: npm install -g pkg
-
-      - name: Build executable for Windows
-        run: pkg . --targets node14-win-x64 --output paintbynumbersgenerator-win.exe
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: paintbynumbersgenerator-win
-          path: paintbynumbersgenerator-win.exe

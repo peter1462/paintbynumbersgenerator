@@ -17,25 +17,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Install GTK dependencies
+      - name: Install GTK dependencies using Chocolatey
         run: |
           choco install gtk-runtime pkgconfiglite -y
+          choco install libjpeg-turbo -y
 
-      - name: Set PKG_CONFIG_PATH for GTK
+      - name: Set PKG_CONFIG_PATH for GTK libraries
         run: echo "PKG_CONFIG_PATH=C:\GTK\lib\pkgconfig" >> $GITHUB_ENV
 
-      - name: Add GTK bin to PATH
+      - name: Add GTK binary directory to system PATH
         run: echo "C:\GTK\bin" >> $GITHUB_PATH
 
       - name: Set environment variable for Visual Studio for node-gyp
         run: echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
 
-      - name: Install dependencies from package-lock.json
+      - name: Set npm configuration for GTK_Root
+        run: npm config set GTK_Root "C:\GTK"
+
+      - name: Install project dependencies using npm ci
         run: npm ci
 
       - name: Install pkg globally
@@ -44,27 +48,27 @@ jobs:
       - name: Install TypeScript globally
         run: npm install typescript -g
 
-      - name: Build CLI to JavaScript
+      - name: Compile CLI from TypeScript to JavaScript
         working-directory: ./src-cli
         run: tsc
 
-      - name: Package CLI to single executable
+      - name: Package CLI as a single executable
         run: pkg .
 
       - name: Create output directory
         run: mkdir "out"
 
-      - name: Copy binary to out directory
+      - name: Copy executable to output directory
         run: copy paint-by-numbers-generator-win.exe .\out\paint-by-numbers-generator-win.exe
 
-      - name: Copy node-canvas binaries to output
+      - name: Copy node-canvas build artifacts to output directory
         run: copy .\node_modules\canvas\build\Release\* .\out
 
-      - name: Cleanup unnecessary debug files
+      - name: Remove debug files from output directory
         working-directory: ./out
         run: del *.pdb *.ipdb *.iobj
 
-      - name: Upload out as artifact
+      - name: Upload output directory as artifact
         uses: actions/upload-artifact@v4
         with:
           name: pbn-cli-win
@@ -75,13 +79,13 @@ jobs:
       - name: Create artifacts directory
         run: mkdir artifacts
 
-      - name: Download a Build Artifact zip
+      - name: Download build artifact zip file
         uses: actions/download-artifact@v4
         with:
           name: "pbn-cli-win"
           path: "./artifacts/pbn-cli-win.zip"
 
-      - name: Create development prerelease
+      - name: Create development pre-release in GitHub
         uses: ncipollo/release-action@v1
         with:
           artifact: "artifacts/*"
